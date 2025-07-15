@@ -1,3 +1,16 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const fetch = require('node-fetch');
+const cors = require('cors');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static('public'));
+
 app.post('/chat', async (req, res) => {
   const userMessage = req.body.message;
 
@@ -28,4 +41,8 @@ app.post('/chat', async (req, res) => {
     console.error("שגיאה בבקשה ל-OpenAI:", error);
     res.status(500).send({ reply: "שגיאה בשרת – אנא נסה שוב מאוחר יותר." });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ Server is running on port ${PORT}`);
 });
