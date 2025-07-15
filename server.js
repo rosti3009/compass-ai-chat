@@ -1,48 +1,41 @@
+// server.js
+
 const express = require('express');
 const bodyParser = require('body-parser');
-const fetch = require('node-fetch');
 const cors = require('cors');
+const dotenv = require('dotenv');
+const OpenAI = require('openai');
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public'));
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 app.post('/chat', async (req, res) => {
-  const userMessage = req.body.message;
-
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: userMessage }],
-        temperature: 0.7
-      })
+    const { message } = req.body;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4', // ⬅️ גרסה בתשלום
+      messages: [{ role: 'user', content: message }],
     });
 
-    const data = await response.json();
-
-    if (data.choices && data.choices[0]) {
-      res.send({ reply: data.choices[0].message.content });
-    } else {
-      console.error("שגיאה בתשובה מה-API:", data);
-      res.status(500).send({ reply: "אירעה שגיאה מול OpenAI" });
-    }
+    const responseText = completion.choices[0]?.message?.content || 'אין תגובה מה-AI';
+    res.json({ response: responseText });
 
   } catch (error) {
-    console.error("שגיאה בבקשה ל-OpenAI:", error);
-    res.status(500).send({ reply: "שגיאה בשרת – אנא נסה שוב מאוחר יותר." });
+    console.error('❌ שגיאה בתשובה מה-API:', error);
+    res.status(500).json({ error: 'שגיאה בתשובה מה-API' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
+  console.log(`✅ שרת פועל על פורט ${PORT}`);
 });
