@@ -1,15 +1,11 @@
-// server.js
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const dotenv = require('dotenv');
+require('dotenv').config();
 const OpenAI = require('openai');
 
-dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT || 10000;
+const port = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -19,23 +15,26 @@ const openai = new OpenAI({
 });
 
 app.post('/chat', async (req, res) => {
-  try {
-    const { message } = req.body;
+  const { message } = req.body;
 
+  if (!message) {
+    return res.status(400).json({ error: 'Missing message in request body' });
+  }
+
+  try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4', // ⬅️ גרסה בתשלום
+      model: 'gpt-4',
       messages: [{ role: 'user', content: message }],
     });
 
-    const responseText = completion.choices[0]?.message?.content || 'אין תגובה מה-AI';
-    res.json({ response: responseText });
-
+    const reply = completion.choices[0].message.content;
+    res.json({ reply });
   } catch (error) {
-    console.error('❌ שגיאה בתשובה מה-API:', error);
-    res.status(500).json({ error: 'שגיאה בתשובה מה-API' });
+    console.error('API Error:', error);
+    res.status(500).json({ error: 'Error communicating with OpenAI API', details: error.message });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ שרת פועל על פורט ${PORT}`);
+app.listen(port, () => {
+  console.log(`✅ Server is running on port ${port}`);
 });
