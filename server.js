@@ -1,8 +1,7 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-require('dotenv').config();
-console.log("🔑 Loaded API key:", process.env.OPENAI_API_KEY);
 const OpenAI = require('openai');
 
 const app = express();
@@ -25,7 +24,7 @@ app.post('/chat', async (req, res) => {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4',
       messages: [{ role: 'user', content: message }],
     });
 
