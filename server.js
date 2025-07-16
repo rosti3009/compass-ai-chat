@@ -1,17 +1,15 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const dotenv = require('dotenv');
+require('dotenv').config();
 const OpenAI = require('openai');
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public')); // חשוב כדי לשרת את index.html
+app.use(express.static('public'));
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -30,11 +28,19 @@ app.post('/chat', async (req, res) => {
       messages: [{ role: 'user', content: message }],
     });
 
-    const reply = completion.choices[0].message.content;
+    const reply = completion.choices?.[0]?.message?.content;
+
+    if (!reply) {
+      return res.status(500).json({ error: 'Empty response from OpenAI' });
+    }
+
     res.json({ reply });
   } catch (error) {
-    console.error('API Error:', error);
-    res.status(500).json({ error: 'Error communicating with OpenAI API', details: error.message });
+    console.error('API Error:', error.response?.data || error.message);
+    res.status(500).json({
+      error: 'Error communicating with OpenAI API',
+      details: error.message,
+    });
   }
 });
 
