@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <title>Compass Chat</title>
@@ -15,24 +15,36 @@
   <h2>צ'אט עם Compass AI</h2>
   <div id="chat-box"></div>
   <input type="text" id="chat-input" placeholder="כתוב כאן..." />
+
   <script>
     const chatBox = document.getElementById('chat-box');
     const chatInput = document.getElementById('chat-input');
 
     chatInput.addEventListener('keypress', async (e) => {
       if (e.key === 'Enter') {
-        const userInput = chatInput.value;
+        const userInput = chatInput.value.trim();
+        if (!userInput) return;
+
         appendMessage('user', userInput);
         chatInput.value = '';
 
-        const response = await fetch('/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: userInput })
-        });
+        try {
+          const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userInput })
+          });
 
-        const data = await response.json();
-        appendMessage('ai', data.reply);
+          const data = await response.json();
+
+          if (response.ok) {
+            appendMessage('ai', data.reply);
+          } else {
+            appendMessage('ai', '⚠️ שגיאה מהשרת: ' + (data.error || 'לא ידועה'));
+          }
+        } catch (err) {
+          appendMessage('ai', '⚠️ שגיאה בתקשורת עם השרת');
+        }
       }
     });
 
